@@ -1,0 +1,6 @@
+ESTA LÍNEA ES LA PRIMERA EN MAYÚSCULAS EN ESTE FICHERO
+esta línea es la primera en minúsculas en este fichero
+Esta Línea Tiene Todas Las Primeras Letras De Cada Palabra En Mayúsculas
+
+La línea encima de esta está en blanco
+Esta es la última línea
