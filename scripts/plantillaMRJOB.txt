@@ -1,0 +1,66 @@
+from mrjob.job import MRJob
+from mrjob.step import MRStep
+
+class MRJobTemplate(MRJob):
+
+    def configure_args(self):
+        """Configuración de argumentos opcionales por línea de comandos"""
+        super(MRJobTemplate, self).configure_args()
+        # Ejemplo: self.add_passthru_arg('--mi-filtro', default='Todos', help='Filtro de ejemplo')
+
+    def mapper(self, _, line):
+        """
+        Paso 1: Lectura y limpieza. 
+        Recibe una línea del CSV y emite (clave, valor)
+        """
+        # Limpiar espacios y separar por comas
+        parts = line.strip().split(',')
+        
+        # Validación: Asegurarse de que la línea tiene las columnas esperadas
+        if len(parts) >= 5:
+            try:
+                # Extraer variables (Ajusta los índices según tu CSV)
+                clave = parts[0].strip()   # Ej: Nombre de la acción
+                valor = float(parts[1])    # Ej: Precio de cierre
+                
+                # EMISIÓN DE DATOS
+                yield clave, valor
+                
+            except ValueError:
+                # Ignorar cabeceras o datos corruptos (no numéricos)
+                pass
+
+    def reducer(self, key, values):
+        """
+        Paso 2: Agregación.
+        Recibe una clave y un iterador con todos sus valores asociados.
+        """
+        # --- OPCIÓN A: Para pocos datos (carga todo en memoria) ---
+        # lista_valores = list(values)
+        
+        # --- OPCIÓN B: Para Big Data real (eficiente en memoria) ---
+        contador = 0
+        suma_total = 0
+        maximo = float('-inf')
+        minimo = float('inf')
+
+        for v in values:
+            contador += 1
+            suma_total += v
+            if v > maximo: maximo = v
+            if v < minimo: minimo = v
+
+        # CÁLCULOS FINALES
+        promedio = suma_total / contador if contador > 0 else 0
+
+        # RESULTADO FINAL
+        yield key, {
+            'cantidad_registros': contador,
+            'maximo': maximo,
+            'minimo': minimo,
+            'promedio': round(promedio, 2)
+        }
+
+if __name__ == '__main__':
+    # Punto de entrada para ejecutar el Job
+    MRJobTemplate.run()
