@@ -1,43 +1,58 @@
 from mrjob.job import MRJob
+from datetime import datetime
 
 class MRListadoMensualIBEX(MRJob):
+    """Descripcion
+    Generar un listado mensual (del mes actual) donde se indique, para cada acci´on, su
+valor inicial, final, m´ınimo y m´aximo.
+    """
 
     def mapper(self, _, line):
-        # Formato esperado: Acciona,231.60,232.00,226.40,02/04
         parts = line.split(',')
-        if len(parts) == 5:
-            accion = parts[0]
-            try:
-                ultimo = float(parts[1])
-                maximo = float(parts[2])
-                minimo = float(parts[3])
-                # No necesitamos la fecha para los cálculos si el fichero está ordenado,
-                # pero la podrías usar para asegurar el orden cronológico.
-                yield accion, (ultimo, maximo, minimo)
-            except ValueError:
-                # Si hay cabeceras o errores de formato, los saltamos
-                pass
+
+        if len(parts) != 5:
+            return
+
+        accion = parts[0]
+        fecha_str = parts[4].strip()
+
+        try:
+            ultimo = float(parts[1])
+            maximo = float(parts[2])
+            minimo = float(parts[3])
+
+            # Convertir fecha (dd/mm)
+            fecha = datetime.strptime(fecha_str, "%d/%m")
+
+            # Mes actual
+            hoy = datetime.now()
+
+            if fecha.month == hoy.month:
+                yield accion, (fecha.day, ultimo, maximo, minimo)
+
+        except:
+            pass
 
     def reducer(self, key, values):
-        lista_valores = list(values)
-        # El valor inicial es el primer 'ultimo' que se registró en el mes
-        valor_inicial = lista_valores[0][0]
-        
-        # El valor final es el último 'ultimo' registrado en el mes
-        valor_final = lista_valores[-1][0]
-        
-        # El máximo global es el mayor de todos los máximos del mes
-        max_mensual = max(v[1] for v in lista_valores)
-        
-        # El mínimo global es el menor de todos los mínimos del mes
-        min_mensual = min(v[2] for v in lista_valores)
-        
+        # Ordenamos por día
+        datos = sorted(values, key=lambda x: x[0])
+
+        if not datos:
+            return
+
+        valor_inicial = datos[0][1]
+        valor_final = datos[-1][1]
+
+        max_mensual = max(v[2] for v in datos)
+        min_mensual = min(v[3] for v in datos)
+
         yield key, {
             'valor_inicial': valor_inicial,
             'valor_final': valor_final,
             'maximo_mensual': max_mensual,
             'minimo_mensual': min_mensual
         }
+
 
 if __name__ == '__main__':
     MRListadoMensualIBEX.run()

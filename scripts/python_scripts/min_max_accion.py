@@ -2,6 +2,10 @@ from mrjob.job import MRJob
 from datetime import datetime
 
 class MinMaxAccion(MRJob):
+    """Descripción:
+    Dado el nombre de una acci´on, recupera su valor m´ınimo y m´aximo de cotizaci´on de la
+    ´ultima hora, semana y mes.
+    """
 
     def configure_args(self):
         super(MinMaxAccion, self).configure_args()
@@ -9,24 +13,24 @@ class MinMaxAccion(MRJob):
 
     def mapper(self, _, line):
         try:
-            partes = line.split(",")
+            acciones = line.split(",")
 
-            if len(partes) < 5:
+            if len(acciones) < 5:
                 return
 
-            nombre = partes[0]
+            nombre = acciones[0]
 
-            # Filtrar solo la acción que queremos
+            # Filtra solo la acción que queremos
             if nombre != self.options.accion:
                 return
 
-            maximo = float(partes[2])
-            minimo = float(partes[3])
-            tiempo = partes[4].strip()
+            maximo = float(acciones[2])
+            minimo = float(acciones[3])
+            tiempo = acciones[4].strip()
 
             ahora = datetime.now()
 
-            # Caso 1: es hora (ej: 10:30)
+            # Caso 1: Hora 
             if ":" in tiempo:
                 hora = datetime.strptime(tiempo, "%H:%M").replace(
                     year=ahora.year, month=ahora.month, day=ahora.day
@@ -37,7 +41,7 @@ class MinMaxAccion(MRJob):
                 if diferencia <= 1:
                     yield "hora", (minimo, maximo)
 
-            # Caso 2: es fecha (ej: 02/04)
+            # Caso 2: Fecha
             else:
                 fecha = datetime.strptime(tiempo, "%d/%m").replace(year=ahora.year)
 

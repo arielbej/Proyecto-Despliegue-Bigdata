@@ -1,8 +1,8 @@
 from mrjob.job import MRJob
-import os
 
 class MRListadoSemanalIBEX(MRJob):
-    """Generar un listado semanal (de la semana actual) donde se indique, para cada acci´on, su
+    """Descripción:
+    Generar un listado semanal (de la semana actual) donde se indique, para cada acci´on, su
 valor inicial, final, m´ınimo y m´aximo.
     """
 

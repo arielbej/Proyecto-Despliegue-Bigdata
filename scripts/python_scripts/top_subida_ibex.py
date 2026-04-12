@@ -1,19 +1,22 @@
 from mrjob.job import MRJob
-from datetime import datetime, timedelta
+from datetime import datetime
 
-class TopSubidasPro(MRJob):
+class MR_TopSubidas(MRJob):
+    """Descripción:
+    Mostrar las 5 acciones que mas han SUBIDO en la ultima semana y ultimo mes.
+    """
 
     def mapper(self, _, line):
         try:
-            partes = line.split(",")
+            acciones = line.split(",")
 
-            if len(partes) < 5:
+            if len(acciones) < 5:
                 return
 
-            nombre = partes[0]
-            apertura = float(partes[1])
-            cierre = float(partes[2])
-            fecha_str = partes[4].strip()
+            nombre = acciones[0]
+            apertura = float(acciones[1])
+            cierre = float(acciones[2])
+            fecha_str = acciones[4].strip()
 
             # Convertimos fecha (formato: dd/mm)
             fecha = datetime.strptime(fecha_str, "%d/%m")
@@ -49,4 +52,4 @@ class TopSubidasPro(MRJob):
 
 
 if __name__ == "__main__":
-    TopSubidasPro.run()
+    MR_TopSubidas.run()
