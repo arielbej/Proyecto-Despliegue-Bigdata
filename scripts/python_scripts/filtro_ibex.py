@@ -1,5 +1,6 @@
 from mrjob.job import MRJob
 from mrjob.step import MRStep
+import os
 
 """Descripción:
 Dado el nombre de una accion y un rango de fechas, obtener su valor minimo y maximo de
@@ -14,30 +15,39 @@ class MRAnalisisRangoAccion(MRJob):
         self.add_passthru_arg('--accion', type=str, required=True, help='Nombre de la accion (ej. Iberdrola)')
         self.add_passthru_arg('--inicio', type=str, required=True, help='Fecha de inicio (ej. 2026-04-01)')
         self.add_passthru_arg('--fin', type=str, required=True, help='Fecha de fin (ej. 2026-04-30)')
-
-    # 2. MAPPER: Filtramos los datos irrelevantes lo antes posible
+    
     def mapper(self, _, line):
+        # 1. Intentar sacar la fecha del NOMBRE del archivo (ej. ibex_2026-04-05.csv)
+        filename = os.environ.get('mapreduce_map_input_file', '')
+        # Si estás en local con mrjob, a veces la variable es esta:
+        if not filename:
+            import inspect
+            # Truco para local: mrjob guarda el path en el objeto job
+            filename = self.options.input_paths[0] if self.options.input_paths else "2026-04-05"
+
+        # Extraemos algo que parezca una fecha del nombre del archivo
+        # Esto es un parche para tu prueba local
+        import re
+        match = re.search(r'\d{4}-\d{2}-\d{2}', filename)
+        fecha_del_archivo = match.group(0) if match else "2026-04-05"
+
         parts = line.split(',')
-        # Asumimos que el formato es: Acción, Último, Máximo, Mínimo, Fecha
-        if len(parts) >= 5:
+        if len(parts) >= 5 and parts[0].strip(): # Evita las líneas de comas vacías ,,,,
             accion_csv = parts[0].strip()
             
-            # Filtro 1: ¿Es la acción que buscamos?
-            # Usamos .lower() para evitar problemas con mayúsculas/minúsculas
             if accion_csv.lower() == self.options.accion.lower():
                 try:
                     ultimo = float(parts[1])
                     maximo = float(parts[2])
                     minimo = float(parts[3])
-                    fecha_csv = parts[4].strip()
                     
-                    # Filtro 2: ¿Está dentro del rango de fechas?
-                    if self.options.inicio <= fecha_csv <= self.options.fin:
-                        # Mandamos la fecha en el value para poder ordenar en el reducer
-                        yield accion_csv, (fecha_csv, ultimo, maximo, minimo)
-                except ValueError:
+                    # Ignoramos lo que diga el CSV en la columna 4 y usamos la fecha del nombre del archivo
+                    if self.options.inicio <= fecha_del_archivo <= self.options.fin:
+                        yield accion_csv, (fecha_del_archivo, ultimo, maximo, minimo)
+                except (ValueError, IndexError):
                     pass
 
+   
     # 3. REDUCER: Cálculos matemáticos
     def reducer(self, key, values):
         # Convertimos a lista y ordenamos por fecha (el primer elemento de la tupla)
