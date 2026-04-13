@@ -43,7 +43,6 @@ class MR_TopBajadas(MRJob):
     def reducer(self, key, values):
         lista = list(values)
 
-        # 🔴 ORDEN ASCENDENTE → más negativo primero
         lista.sort()
 
         # Top 5 bajadas (más negativas)
