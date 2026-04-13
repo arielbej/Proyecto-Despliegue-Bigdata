@@ -9,6 +9,7 @@ Este proyecto procesa datos del IBEX 35 utilizando **Hadoop** y **MapReduce** (m
 * Las librerias necesrias las puedes encontrar en src/requirements.txt o directamente instalarlas ejecutando ```pip install -r requirements.txt``` con el env activado.
 
 ## Estructura del proyecto
+```Plaintext
 Proyecto-Despliegue-Bigdata/
 ├── Data/                        # Archivos CSV origen (SAN.csv, ITX.csv, etc.)
 ├── src/                         # Código fuente principal
@@ -30,6 +31,7 @@ Proyecto-Despliegue-Bigdata/
 │   └── requirements.txt         # Dependencias de Python
 ├── compose-hadoop-cluster-...   # Configuración de Docker Compose
 └── README.md                    # Documentación del proyecto
+```
 
 ## 📂 Preparación y Rutas del Cluster( Docker)
 Los archivos residen en el contenedor `namenode-mr` bajo la ruta `/home/luser`.
